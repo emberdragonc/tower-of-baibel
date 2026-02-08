@@ -38,6 +38,7 @@ export interface CollectionMetadata {
   author: string;
   docCount: number;
   ipfsHash: string;
+  manifest?: Manifest;
   qualityScore: number;
   ratingCount: number;
   createdAt: string;
