@@ -3,6 +3,7 @@ export interface Manifest {
   version: string;
   description: string;
   author: string;
+  docCount?: number;
   docs: DocEntry[];
   createdAt: string;
   updatedAt: string;

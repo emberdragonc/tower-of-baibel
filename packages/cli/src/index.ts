@@ -3,6 +3,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import { listCollections } from './commands/list.js';
+import { pushCollection } from './commands/push.js';
 
 const program = new Command();
 
@@ -44,15 +45,14 @@ program
   .description('Publish a directory as a collection')
   .option('--private', 'Do not publish to public registry')
   .option('--skip-validation', 'Skip manifest validation')
-  .action(async (directory: string, options: { private?: boolean; skipValidation?: boolean }) => {
-    console.log(chalk.blue(`Pushing directory: ${directory}`));
-    if (options.private) {
-      console.log(chalk.gray('Private mode: will not publish to public registry'));
+  .option('-r, --registry <url>', 'Registry API URL')
+  .action(async (directory: string, options: { private?: boolean; skipValidation?: boolean; registry?: string }) => {
+    try {
+      await pushCollection(directory, options);
+    } catch (error) {
+      console.error(chalk.red('Error pushing collection:'), error);
+      process.exit(1);
     }
-    if (options.skipValidation) {
-      console.log(chalk.yellow('Skipping validation'));
-    }
-    console.log(chalk.yellow('Command not yet implemented.'));
   });
 
 program
