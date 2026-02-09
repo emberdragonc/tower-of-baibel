@@ -7,6 +7,9 @@ import { pushCollection } from './commands/push.js';
 import { pullCollection } from './commands/pull.js';
 import { searchCollections } from './commands/search.js';
 import { browseCollections } from './commands/browse.js';
+import { rateCollection } from './commands/rate.js';
+import { stakeOnCollection, unstakeFromCollection } from './commands/stake.js';
+import { showCollectionInfo } from './commands/info.js';
 
 const program = new Command();
 
@@ -88,29 +91,70 @@ program
 
 program
   .command('rate <collection> <rating>')
-  .description('Rate a collection (1-5 stars)')
-  .argument('[text]', 'Optional review text')
-  .option('-w, --wallet <key>', 'Wallet private key or env var name')
+  .description('Rate a collection 1-5 stars on-chain')
+  .option('--review <text>', 'Optional review text')
+  .option('-w, --wallet <key>', 'Wallet private key (or uses EMBER_WALLET_KEY env var)')
   .action(async (
     collection: string,
     rating: string,
-    text: string | undefined,
-    options: { wallet?: string }
+    options: { review?: string; wallet?: string }
   ) => {
-    const ratingNum = parseInt(rating, 10);
-    if (isNaN(ratingNum) || ratingNum < 1 || ratingNum > 5) {
-      console.error(chalk.red('Rating must be between 1 and 5'));
+    try {
+      const ratingNum = parseInt(rating, 10);
+      await rateCollection(collection, ratingNum, options);
+    } catch (error) {
+      console.error(chalk.red('Error rating collection:'), error);
       process.exit(1);
     }
-    console.log(chalk.blue(`Rating collection: ${collection}`));
-    console.log(chalk.gray(`Rating: ${'★'.repeat(ratingNum)}${'☆'.repeat(5 - ratingNum)} (${ratingNum}/5)`));
-    if (text) {
-      console.log(chalk.gray(`Review: ${text}`));
+  });
+
+program
+  .command('stake <collection> <amount>')
+  .description('Stake EMBER tokens on a collection')
+  .option('-w, --wallet <key>', 'Wallet private key (or uses EMBER_WALLET_KEY env var)')
+  .action(async (
+    collection: string,
+    amount: string,
+    options: { wallet?: string }
+  ) => {
+    try {
+      await stakeOnCollection(collection, amount, options);
+    } catch (error) {
+      console.error(chalk.red('Error staking:'), error);
+      process.exit(1);
     }
-    if (options.wallet) {
-      console.log(chalk.gray('Wallet specified'));
+  });
+
+program
+  .command('unstake <collection>')
+  .description('Unstake EMBER tokens from a collection')
+  .option('-w, --wallet <key>', 'Wallet private key (or uses EMBER_WALLET_KEY env var)')
+  .action(async (
+    collection: string,
+    options: { wallet?: string }
+  ) => {
+    try {
+      await unstakeFromCollection(collection, options);
+    } catch (error) {
+      console.error(chalk.red('Error unstaking:'), error);
+      process.exit(1);
     }
-    console.log(chalk.yellow('Command not yet implemented.'));
+  });
+
+program
+  .command('info <collection>')
+  .description('Show on-chain info for a collection')
+  .option('-w, --wallet <key>', 'Wallet private key (optional, for personal stake info)')
+  .action(async (
+    collection: string,
+    options: { wallet?: string }
+  ) => {
+    try {
+      await showCollectionInfo(collection, options);
+    } catch (error) {
+      console.error(chalk.red('Error fetching collection info:'), error);
+      process.exit(1);
+    }
   });
 
 program.parse();
